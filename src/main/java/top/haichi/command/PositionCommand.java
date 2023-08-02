@@ -1,6 +1,7 @@
 package top.haichi.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -22,26 +23,33 @@ public class PositionCommand implements CommandRegistrationCallback {
         dispatcher.register(literal("sc")
                 .requires(serverCommandSource -> true)
                 .then(literal("pos")
+                        .then(literal("search")
+                                .then(argument("关键词", StringArgumentType.string())
+                                        .executes(context -> {
+                                            context.getSource().sendMessage(Text.literal(searchPositions(context.getArgument("关键词", String.class))));
+                                            return 1;
+                                        })))
                         .then(literal("here")
                                 .then(argument("地名", StringArgumentType.string())
                                         .then(argument("简介", StringArgumentType.string())
-                                                .executes(context -> {
-                                                    addPosition(context);
+                                                .executes(context -> {addPosition(context);
                                                     return 1;
                                                 })))
                         )
                         .then(literal("list")
                                 .executes(context -> {
-                                    context.getSource().sendMessage(
-                                            Text.literal(getPositions())
-                                    );
+                                    context.getSource().sendMessage(Text.literal(getPositions()));
                                     return 1;
                                 }))));
     }
 
+    /**
+     * 获取所有坐标信息
+     * @return
+     */
     private static String getPositions() {
         Positions positions = Positions.load();
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder("获取到以下坐标信息：\n");
         for (Positions.Position position : positions.positions) {
             int index = positions.positions.indexOf(position);
             stringBuilder.append(
@@ -50,6 +58,24 @@ public class PositionCommand implements CommandRegistrationCallback {
         return stringBuilder.toString();
     }
 
+    /**
+     * 根据关键词搜索坐标信息
+     * @param keyWord
+     * @return
+     */
+    private static String searchPositions(String keyWord) {
+        Positions positions = Positions.load();
+        StringBuilder stringBuilder = new StringBuilder("搜索到以下坐标信息：\n");
+        positions.positions.stream().filter(position -> position.name.contains(keyWord)).forEach(position ->
+                stringBuilder.append(position.toString()));
+        if(stringBuilder.isEmpty())return "未搜索到相关信息";
+        return stringBuilder.toString();
+    }
+
+    /**
+     * 在玩家所在位置新建坐标信息
+     * @param context
+     */
     private static void addPosition(CommandContext<ServerCommandSource> context) {
         String name = context.getArgument("地名", String.class);
         String description = context.getArgument("简介", String.class);
@@ -78,5 +104,6 @@ public class PositionCommand implements CommandRegistrationCallback {
         position.description = description;
         Positions.load().add(position);
         context.getSource().getPlayer().sendMessage(Text.literal(position.toString() + "§f添加成功"));
+
     }
 }
