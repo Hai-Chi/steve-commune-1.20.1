@@ -17,7 +17,8 @@ import net.minecraft.world.dimension.DimensionTypes;
 import top.haichi.storage.Positions;
 import top.haichi.utils.Dimension;
 
-import static net.minecraft.server.command.CommandManager.*;
+import static net.minecraft.server.command.CommandManager.argument;
+import static net.minecraft.server.command.CommandManager.literal;
 
 public class PositionCommand implements CommandRegistrationCallback {
 
