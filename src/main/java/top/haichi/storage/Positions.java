@@ -6,31 +6,26 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
+import top.haichi.utils.Dimension;
+
 public class Positions {
-    public ArrayList<Position> positions = new ArrayList<>();
-    public static final File positionFile = new File(Storage.DATA_DIR + "/positions.json");
+    public final ArrayList<Position> positions = new ArrayList<>();
+    private static final File POSITION_FILE = new File(Storage.DATA_DIR + "/positions.json");
 
-    /**
-     * 从文件中读取
-     */
     public static Positions load() {
-        Positions instance;
-        if (!positionFile.exists()) {
-            instance = new Positions();
+        if (!POSITION_FILE.exists()) {
+            Positions instance = new Positions();
             instance.save();
+            return instance;
+        } else {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(POSITION_FILE), StandardCharsets.UTF_8))) {
+                return Storage.GSON.fromJson(reader, Positions.class);
+            } catch (Exception e) {
+                throw new RuntimeException("无法加载positions.json文件");
+            }
         }
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(positionFile), StandardCharsets.UTF_8))) {
-            instance = Storage.GSON.fromJson(reader, Positions.class);
-        } catch (Exception e) {
-            throw new RuntimeException("无法加载positions.json文件");
-        }
-
-        return instance;
     }
 
-    /**
-     * 保存到文件
-     */
     public void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(positionFile,StandardCharsets.UTF_8))) {
             Storage.GSON.toJson(this, writer);
@@ -48,22 +43,11 @@ public class Positions {
         save();
     }
 
-    /**
-     * 根据名字删除一个坐标
-     *
-     * @param name
-     */
     public void remove(String name) {
-        this.positions.removeIf(position -> {
-            return position.name.equals(name);
-        });
+        this.positions.removeIf(position -> position.name.equals(name));
         save();
     }
 
-
-    /**
-     * 单个坐标类
-     */
     public static class Position {
         public String dimension;
         public String mainPos;
@@ -72,83 +56,41 @@ public class Positions {
         public String name;
         public String description;
 
-        public Position() {
-        }
-
-        public Position(String dimension, String mainPos, String netherPos, String endPos, String name, String description) {
-            this.dimension = dimension;
-            this.mainPos = mainPos;
-            this.netherPos = netherPos;
-            this.endPos = endPos;
-            this.name = name;
-            this.description = description;
+        @Override
+        public String toString() {
+            return toString(-1);
         }
 
         public String toString(int index) {
-            if (dimension.equals("末地")) {
-                return "§b" + index + ". " +
-                        name + "-------------------" +
-                        "\n 维度：" + dimension +
-                        "\n 末地坐标：" + endPos +
-                        "\n 简介：" + description +
-                        "\n\n";
-            } else if (dimension.equals("主世界")) {
-                return "§6" + index + ". " +
-                        name + "-------------------" +
-                        "\n 维度：" + dimension +
-                        "\n 主世界坐标：" + mainPos +
-                        "\n 地狱坐标：" + netherPos +
-                        "\n 简介：" + description +
-                        "\n\n";
-            } else if (dimension.equals("地狱")) {
-                return "§4" + index + ". " +
-                        name + "-------------------" +
-                        "\n 维度：" + dimension +
-                        "\n 地狱坐标：" + netherPos +
-                        "\n 简介：" + description +
-                        "\n\n";
-            } else return "§f" + index + ". " +
-                    name + "-------------------" +
-                    "\n 维度：" + dimension +
-                    "\n 主世界坐标：" + mainPos +
-                    "\n 地狱坐标：" + netherPos +
-                    "\n 末地坐标：" + endPos +
-                    "\n 简介：" + description +
-                    "\n\n";
-        }
+            StringBuilder builder = new StringBuilder();
 
-        @Override
-        public String toString() {
-            if (dimension.equals("末地")) {
-                return "§b" +
-                        name + "-------------------" +
-                        "\n 维度：" + dimension +
-                        "\n 末地坐标：" + endPos +
-                        "\n 简介：" + description +
-                        "\n\n";
-            } else if (dimension.equals("主世界")) {
-                return "§6" +
-                        name + "-------------------" +
-                        "\n 维度：" + dimension +
-                        "\n 主世界坐标：" + mainPos +
-                        "\n 地狱坐标：" + netherPos +
-                        "\n 简介：" + description +
-                        "\n\n";
-            } else if (dimension.equals("地狱")) {
-                return "§4" +
-                        name + "-------------------" +
-                        "\n 维度：" + dimension +
-                        "\n 地狱坐标：" + netherPos +
-                        "\n 简介：" + description +
-                        "\n\n";
-            } else return "§f" +
-                    name + "-------------------" +
-                    "\n 维度：" + dimension +
-                    "\n 主世界坐标：" + mainPos +
-                    "\n 地狱坐标：" + netherPos +
-                    "\n 末地坐标：" + endPos +
-                    "\n 简介：" + description +
-                    "\n\n";
+            if (index != -1) builder.append("§f").append(index).append(". ");
+
+            switch (dimension) {
+                case Dimension.THE_END -> builder.append("§b").append(name).append("-------------------")
+                        .append("\n 维度：").append(dimension)
+                        .append("\n 末地坐标：").append(endPos)
+                        .append("\n 简介：").append(description);
+                case Dimension.OVER_WORLD -> builder.append("§6").append(name).append("-------------------")
+                        .append("\n 维度：").append(dimension)
+                        .append("\n 主世界坐标：").append(mainPos)
+                        .append("\n 地狱坐标：").append(netherPos)
+                        .append("\n 简介：").append(description);
+                case Dimension.THE_NETHER -> builder.append("§4").append(name).append("-------------------")
+                        .append("\n 维度：").append(dimension)
+                        .append("\n 地狱坐标：").append(netherPos)
+                        .append("\n 简介：").append(description);
+                default -> builder.append("§f").append(name).append("-------------------")
+                        .append("\n 维度：").append(dimension)
+                        .append("\n 主世界坐标：").append(mainPos)
+                        .append("\n 地狱坐标：").append(netherPos)
+                        .append("\n 末地坐标：").append(endPos)
+                        .append("\n 简介：").append(description);
+            }
+
+            builder.append("\n\n");
+            return builder.toString();
         }
     }
 }
+
