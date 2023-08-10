@@ -27,13 +27,17 @@ public class Positions {
     }
 
     public void save() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(POSITION_FILE))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(positionFile,StandardCharsets.UTF_8))) {
             Storage.GSON.toJson(this, writer);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * 添加一个新坐标
+     * @param position
+     */
     public void add(Position position) {
         this.positions.add(position);
         save();
