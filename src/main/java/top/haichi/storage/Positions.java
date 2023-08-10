@@ -32,7 +32,7 @@ public class Positions {
      * 保存到文件
      */
     public void save() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(positionFile))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(positionFile,StandardCharsets.UTF_8))) {
             Storage.GSON.toJson(this, writer);
         } catch (Exception e) {
             e.printStackTrace();
@@ -41,7 +41,6 @@ public class Positions {
 
     /**
      * 添加一个新坐标
-     *
      * @param position
      */
     public void add(Position position) {

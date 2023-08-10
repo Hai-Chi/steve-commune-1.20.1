@@ -1,7 +1,6 @@
 package top.haichi.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -15,7 +14,8 @@ import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.dimension.DimensionTypes;
 import top.haichi.storage.Positions;
 
-import static net.minecraft.server.command.CommandManager.*;
+import static net.minecraft.server.command.CommandManager.argument;
+import static net.minecraft.server.command.CommandManager.literal;
 
 public class PositionCommand implements CommandRegistrationCallback {
     @Override
@@ -106,4 +106,5 @@ public class PositionCommand implements CommandRegistrationCallback {
         context.getSource().getPlayer().sendMessage(Text.literal(position.toString() + "§f添加成功"));
 
     }
+
 }
