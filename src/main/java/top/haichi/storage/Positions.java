@@ -48,8 +48,8 @@ public class Positions {
         public String dimension;
         public String mainPos;
         public String netherPos;
-        public String endPos;
         public String name;
+        public String endPos;
         public String description;
 
         @Override
