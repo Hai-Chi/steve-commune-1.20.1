@@ -27,7 +27,7 @@ public class Positions {
     }
 
     public void save() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(positionFile,StandardCharsets.UTF_8))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(POSITION_FILE,StandardCharsets.UTF_8))) {
             Storage.GSON.toJson(this, writer);
         } catch (Exception e) {
             e.printStackTrace();
