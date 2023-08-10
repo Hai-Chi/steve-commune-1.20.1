@@ -1,7 +1,8 @@
 package top.haichi.command;
 
+import java.util.stream.Collectors;
+
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -14,10 +15,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.dimension.DimensionTypes;
 import top.haichi.storage.Positions;
+import top.haichi.utils.Dimension;
 
 import static net.minecraft.server.command.CommandManager.*;
 
 public class PositionCommand implements CommandRegistrationCallback {
+
     @Override
     public void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment environment) {
         dispatcher.register(literal("sc")
@@ -32,7 +35,8 @@ public class PositionCommand implements CommandRegistrationCallback {
                         .then(literal("here")
                                 .then(argument("地名", StringArgumentType.string())
                                         .then(argument("简介", StringArgumentType.string())
-                                                .executes(context -> {addPosition(context);
+                                                .executes(context -> {
+                                                    addPosition(context);
                                                     return 1;
                                                 })))
                         )
@@ -45,65 +49,65 @@ public class PositionCommand implements CommandRegistrationCallback {
 
     /**
      * 获取所有坐标信息
-     * @return
+     *
+     * @return 坐标信息
      */
     private static String getPositions() {
         Positions positions = Positions.load();
         StringBuilder stringBuilder = new StringBuilder("获取到以下坐标信息：\n");
-        for (Positions.Position position : positions.positions) {
-            int index = positions.positions.indexOf(position);
-            stringBuilder.append(
-                    position.toString(index + 1));
-        }
+        positions.positions.forEach(position -> stringBuilder.append(position.toString()));
         return stringBuilder.toString();
     }
 
     /**
      * 根据关键词搜索坐标信息
-     * @param keyWord
-     * @return
+     *
+     * @param keyWord 关键词
+     * @return 坐标信息
      */
     private static String searchPositions(String keyWord) {
         Positions positions = Positions.load();
-        StringBuilder stringBuilder = new StringBuilder("搜索到以下坐标信息：\n");
-        positions.positions.stream().filter(position -> position.name.contains(keyWord)).forEach(position ->
-                stringBuilder.append(position.toString()));
-        if(stringBuilder.isEmpty())return "未搜索到相关信息";
-        return stringBuilder.toString();
+        String result = positions.positions.stream()
+                .filter(position -> position.name.contains(keyWord))
+                .map(Positions.Position::toString)
+                .collect(Collectors.joining("\n", "搜索到以下坐标信息：\n", ""));
+
+        return result.isEmpty() ? "未搜索到相关信息" : result;
     }
 
     /**
      * 在玩家所在位置新建坐标信息
-     * @param context
+     *
+     * @param context 参数信息
      */
     private static void addPosition(CommandContext<ServerCommandSource> context) {
         String name = context.getArgument("地名", String.class);
         String description = context.getArgument("简介", String.class);
-        //获取坐标
+
         BlockPos blockPos = context.getSource().getPlayer().getBlockPos();
-        String pos = blockPos.getX() + "," + blockPos.getY() + "," + blockPos.getZ();
-        //维度
+        String pos = String.format("%d,%d,%d", blockPos.getX(), blockPos.getY(), blockPos.getZ());
+
         RegistryKey<DimensionType> dimensionKey = context.getSource().getWorld().getDimensionKey();
         String dimension;
-
         Positions.Position position = new Positions.Position();
 
         if (dimensionKey.equals(DimensionTypes.OVERWORLD)) {
-            dimension = "主世界";
+            dimension = Dimension.OVER_WORLD;
             position.mainPos = pos;
-            position.netherPos = blockPos.getX() / 8 + "," + blockPos.getZ() / 8;
+            position.netherPos = String.format("%d,%d", blockPos.getX() / 8, blockPos.getZ() / 8);
         } else if (dimensionKey.equals(DimensionTypes.THE_END)) {
-            dimension = "末地";
+            dimension = Dimension.THE_END;
             position.endPos = pos;
         } else if (dimensionKey.equals(DimensionTypes.THE_NETHER)) {
-            dimension = "地狱";
+            dimension = Dimension.THE_NETHER;
             position.netherPos = pos;
-        } else dimension = "未知";
+        } else dimension = Dimension.UNKNOWN;
+
         position.dimension = dimension;
         position.name = name;
         position.description = description;
+
         Positions.load().add(position);
         context.getSource().getPlayer().sendMessage(Text.literal(position.toString() + "§f添加成功"));
-
     }
 }
