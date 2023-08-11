@@ -1,7 +1,5 @@
 package top.haichi.storage;
 
-import com.google.gson.Gson;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -50,7 +48,7 @@ public class Positions {
 
     public static class Position {
         public String dimension;
-        public String mainPos;
+        public String overworldPos;
         public String netherPos;
         public String name;
         public String endPos;
@@ -73,7 +71,7 @@ public class Positions {
                         .append("\n 简介：").append(description);
                 case Dimension.OVER_WORLD -> builder.append("§6").append(name).append("-------------------")
                         .append("\n 维度：").append(dimension)
-                        .append("\n 主世界坐标：").append(mainPos)
+                        .append("\n 主世界坐标：").append(overworldPos)
                         .append("\n 地狱坐标：").append(netherPos)
                         .append("\n 简介：").append(description);
                 case Dimension.THE_NETHER -> builder.append("§4").append(name).append("-------------------")
@@ -82,13 +80,11 @@ public class Positions {
                         .append("\n 简介：").append(description);
                 default -> builder.append("§f").append(name).append("-------------------")
                         .append("\n 维度：").append(dimension)
-                        .append("\n 主世界坐标：").append(mainPos)
+                        .append("\n 主世界坐标：").append(overworldPos)
                         .append("\n 地狱坐标：").append(netherPos)
                         .append("\n 末地坐标：").append(endPos)
                         .append("\n 简介：").append(description);
             }
-
-            builder.append("\n\n");
             return builder.toString();
         }
     }
