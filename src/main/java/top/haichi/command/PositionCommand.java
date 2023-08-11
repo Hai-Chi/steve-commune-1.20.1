@@ -30,7 +30,7 @@ public class PositionCommand implements CommandRegistrationCallback {
                         .then(literal("search")
                                 .then(argument("关键词", StringArgumentType.string())
                                         .executes(context -> {
-                                            context.getSource().sendMessage(Text.literal(searchPositions(context.getArgument("关键词", String.class))));
+                                            searchPositions(context.getArgument("关键词", String.class),context.getSource());
                                             return 1;
                                         })))
                         .then(literal("here")
@@ -42,10 +42,7 @@ public class PositionCommand implements CommandRegistrationCallback {
                                                 })))
                         )
                         .then(literal("list")
-                                .executes(context -> {
-                                    context.getSource().sendMessage(Text.literal(getPositions()));
-                                    return 1;
-                                }))));
+                                .executes(PositionCommand::sendPositionMessages))));
     }
 
     /**
@@ -53,6 +50,7 @@ public class PositionCommand implements CommandRegistrationCallback {
      *
      * @return 坐标信息
      */
+    @Deprecated
     private static String getPositions() {
         Positions positions = Positions.load();
         StringBuilder stringBuilder = new StringBuilder("获取到以下坐标信息：\n");
@@ -61,19 +59,61 @@ public class PositionCommand implements CommandRegistrationCallback {
     }
 
     /**
-     * 根据关键词搜索坐标信息
+     * 发送带有小地图坐标的所有坐标信息
      *
-     * @param keyWord 关键词
-     * @return 坐标信息
+     * @param context
      */
-    private static String searchPositions(String keyWord) {
+    private static int sendPositionMessages(CommandContext<ServerCommandSource> context) {
         Positions positions = Positions.load();
-        String result = positions.positions.stream()
-                .filter(position -> position.name.contains(keyWord))
-                .map(Positions.Position::toString)
-                .collect(Collectors.joining("\n", "搜索到以下坐标信息：\n", ""));
+        ServerCommandSource source = context.getSource();
+        source.sendMessage(Text.literal("获取到以下坐标信息："));
+        positions.positions.forEach(position -> {
+            source.sendMessage(Text.literal(position.toString()));
+            source.sendMessage(Text.literal(generateWaypointSession(position)));
+            source.sendMessage(Text.literal(""));
+        });
+        return 1;
+    }
 
-        return result.isEmpty() ? "未搜索到相关信息" : result;
+    /**
+     * 生成小地图session
+     *
+     * @param position
+     * @return
+     */
+    private static String generateWaypointSession(Positions.Position position) {
+        switch (position.dimension) {
+            case Dimension.THE_END -> {
+                String pos = position.endPos.replaceAll(",", ":");
+                return "xaero-waypoint:小地图:S:" + pos + ":0:false:0:Internal-the-end-waypoints";
+            }
+            case Dimension.OVER_WORLD -> {
+                String pos = position.overworldPos.replaceAll(",", ":");
+                return "xaero-waypoint:小地图:S:" + pos + ":0:false:0:Internal-overworld-waypoints";
+            }
+            case Dimension.THE_NETHER -> {
+                String pos = position.netherPos.replaceAll(",", ":");
+                return "xaero-waypoint:小地图:S:" + pos + ":0:false:0:Internal-the-nether-waypoints";
+            }
+            default -> {
+                return "";
+            }
+
+        }
+    }
+
+    /**
+     * 根据关键词搜索坐标信息
+     */
+    private static void searchPositions(String keyWord,ServerCommandSource source) {
+        Positions positions = Positions.load();
+        positions.positions.stream()
+                .filter(position -> position.name.contains(keyWord))
+                .forEach(position -> {
+                    source.sendMessage(Text.literal(position.toString()));
+                    source.sendMessage(Text.literal(generateWaypointSession(position)));
+                    source.sendMessage(Text.literal(""));
+                });
     }
 
     /**
@@ -94,7 +134,7 @@ public class PositionCommand implements CommandRegistrationCallback {
 
         if (dimensionKey.equals(DimensionTypes.OVERWORLD)) {
             dimension = Dimension.OVER_WORLD;
-            position.mainPos = pos;
+            position.overworldPos = pos;
             position.netherPos = String.format("%d,%d", blockPos.getX() / 8, blockPos.getZ() / 8);
         } else if (dimensionKey.equals(DimensionTypes.THE_END)) {
             dimension = Dimension.THE_END;
@@ -109,6 +149,6 @@ public class PositionCommand implements CommandRegistrationCallback {
         position.description = description;
 
         Positions.load().add(position);
-        context.getSource().getPlayer().sendMessage(Text.literal(position.toString() + "§f添加成功"));
+        context.getSource().getPlayer().sendMessage(Text.literal(position.toString() + "\n§f添加成功"));
     }
 }
