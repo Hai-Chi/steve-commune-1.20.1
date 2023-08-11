@@ -4,7 +4,6 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.dimension.DimensionTypes;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static top.haichi.storage.Dimension.Types.UNKNOWN;
