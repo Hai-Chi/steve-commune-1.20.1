@@ -27,6 +27,5 @@ public class SteveCommune implements ModInitializer {
 		ModEvents.registerEvents();
 		//注册命令
 		ModCommands.registerCommands();
-
 	}
 }
